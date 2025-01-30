@@ -35,9 +35,12 @@ else:
 
 # Fetch data from MySQL database
 def fetch_data(start_date, end_date):
-    #query = f"SELECT datum, gas, waterLtr, elecTOTverbruik, elecTOTgeleverd FROM energiemeter WHERE datum BETWEEN '{start_date}' AND '{end_date}'"
-    query = f"SELECT datum, gasACTverbruik, waterACTgebruik, elecACTverbruik, elecACTgeleverd FROM energiemeter WHERE datum BETWEEN '{start_date}' AND '{end_date}'"
+    query = f"SELECT datum, gas, waterLtr, elecACTverbruik, elecACTgeleverd FROM energiemeter WHERE datum BETWEEN '{start_date}' AND '{end_date}'"
     df = pd.read_sql(query, conn)
+
+    df['gasACTverbruik'] = df['gas'].diff()
+    df['waterACTverbruik'] = df['waterLtr'].diff()
+
     return df
 
 # Initial data
@@ -74,9 +77,8 @@ fig1 = px.line(df_long, x='datum', y='Value', color='Type', title='Elec. Verbrui
                       color_discrete_map={ 'elecACTverbruik': 'red', 'elecACTgeleverd': 'green' })
 
 fig2 = px.line(df, x='datum', y='elecACTverbruik', title='Elec. Verbruik', color_discrete_sequence=['red'])
-fig3 = px.line(df, x='datum', y='waterACTgebruik', title='Water', color_discrete_sequence=['blue'])
+fig3 = px.line(df, x='datum', y='waterACTverbruik', title='Water', color_discrete_sequence=['blue'])
 fig4 = px.line(df, x='datum', y='gasACTverbruik', title='Gas', color_discrete_sequence=['orange'])
-
 
 # Define the layout of the app
 app.layout = dbc.Container(fluid=True, children=[
@@ -119,14 +121,9 @@ def update_graph(n_clicks, start_date, end_date):
     fig1 = px.line(df_long, x='datum', y='Value', color='Type', title='Elec. Verbruik and Elec. Geleverd',
                       labels={'Value': 'Electricity', 'datum': 'Date'},
                       color_discrete_map={ 'elecACTverbruik': 'red', 'elecACTgeleverd': 'green' })
-
     fig2 = px.line(df, x='datum', y='elecACTverbruik', title='Elec. Verbruik', color_discrete_sequence=['red'])
-    fig3 = px.line(df, x='datum', y='waterACTgebruik', title='Water', color_discrete_sequence=['blue'])
+    fig3 = px.line(df, x='datum', y='waterACTverbruik', title='Water', color_discrete_sequence=['blue'])
     fig4 = px.line(df, x='datum', y='gasACTverbruik', title='Gas', color_discrete_sequence=['orange'])
-    #fig3 = px.line(df, x='datum', y='elecACTgeleverd', title='Elec. Geleverd', color_discrete_sequence=['green'])
-
-
-    #fig4 = px.scatter(df, x='datum', y='elecTOTgeleverd', title='Elec. Ver/Gel', color_discrete_sequence=['green']),
     return fig1, fig2, fig3, fig4
 
 if __name__ == '__main__':
